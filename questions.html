@@ -6,82 +6,148 @@
   <title>Question Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-slate-100">
 
   <!-- Navbar -->
-  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Manage Questions</h1>
-    <button onclick="goBack()" class="bg-white text-blue-600 px-4 py-1 rounded">Back</button>
+  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center shadow">
+    <h1 class="text-xl font-bold tracking-wide">Manage Questions</h1>
+    <button onclick="goBack()" class="bg-white text-blue-600 px-4 py-1 rounded shadow hover:bg-blue-50 transition">
+      Back
+    </button>
   </div>
 
   <!-- Container -->
-  <div class="p-6 max-w-5xl mx-auto">
+  <div class="p-6 max-w-6xl mx-auto space-y-6">
 
-    <h2 class="text-2xl font-semibold mb-4">Add / Edit Questions</h2>
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <h2 class="text-2xl font-semibold">Add / Edit Questions</h2>
+      <span class="text-sm text-slate-500">
+        Configure question text, type, options, order and mandatory flag.
+      </span>
+    </div>
 
     <!-- Question Form -->
-    <div class="bg-white rounded shadow p-4 mb-8">
-      <form id="questionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl shadow border border-slate-200 p-4 md:p-5">
+      <form id="questionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
         <input type="hidden" id="questionid" />
 
-        <div>
-          <label class="font-semibold">Question</label>
-          <input id="question" class="w-full border p-2 rounded" required />
+        <!-- Question text -->
+        <div class="md:col-span-2">
+          <label class="font-semibold block mb-1">Question</label>
+          <input
+            id="question"
+            class="w-full border border-slate-300 p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+            placeholder="Enter your question text here"
+          />
         </div>
 
+        <!-- Question type -->
         <div>
-          <label class="font-semibold">Question Type</label>
-          <select id="questiontype" class="w-full border p-2 rounded">
+          <label class="font-semibold block mb-1">Question Type</label>
+          <select
+            id="questiontype"
+            class="w-full border border-slate-300 p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
             <option value="text">Text</option>
             <option value="single">Single Choice</option>
             <option value="multiple">Multiple Choice</option>
+            <option value="rating_1_10">Rating (1–10)</option>
           </select>
+          <p class="text-xs text-slate-500 mt-1">
+            Rating type will show a 1–10 scale on the survey page.
+          </p>
         </div>
 
-        <div>
-          <label class="font-semibold">Option 1</label>
-          <input id="option1" class="w-full border p-2 rounded" />
-        </div>
-        <div>
-          <label class="font-semibold">Option 2</label>
-          <input id="option2" class="w-full border p-2 rounded" />
-        </div>
-        <div>
-          <label class="font-semibold">Option 3</label>
-          <input id="option3" class="w-full border p-2 rounded" />
-        </div>
-        <div>
-          <label class="font-semibold">Option 4</label>
-          <input id="option4" class="w-full border p-2 rounded" />
-        </div>
-        <div>
-          <label class="font-semibold">Option 5</label>
-          <input id="option5" class="w-full border p-2 rounded" />
-        </div>
-        <div>
-          <label class="font-semibold">Option 6</label>
-          <input id="option6" class="w-full border p-2 rounded" />
+        <!-- Mandatory toggle -->
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold">Mandatory</label>
+          <div class="flex items-center gap-3">
+            <label class="inline-flex items-center cursor-pointer">
+              <input
+                id="mandatory"
+                type="checkbox"
+                class="sr-only peer"
+              />
+              <div
+                class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full
+                       peer peer-checked:bg-blue-600 transition-colors"
+              >
+                <div
+                  class="w-5 h-5 bg-white rounded-full shadow transform translate-x-1 mt-0.5
+                         peer-checked:translate-x-5 transition-transform"
+                ></div>
+              </div>
+              <span class="ml-2 text-sm text-slate-700 peer-checked:text-blue-600">
+                Required
+              </span>
+            </label>
+          </div>
+          <p class="text-xs text-slate-500">
+            If enabled, the respondent must answer this question before submitting.
+          </p>
         </div>
 
+        <!-- Options -->
         <div>
-          <label class="font-semibold">Order</label>
-          <input id="question_order" type="number" class="w-full border p-2 rounded" />
+          <label class="font-semibold block mb-1">Option 1</label>
+          <input id="option1" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Option 2</label>
+          <input id="option2" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Option 3</label>
+          <input id="option3" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Option 4</label>
+          <input id="option4" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Option 5</label>
+          <input id="option5" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="font-semibold block mb-1">Option 6</label>
+          <input id="option6" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+
+        <!-- Order -->
+        <div>
+          <label class="font-semibold block mb-1">Order</label>
+          <input
+            id="question_order"
+            type="number"
+            class="w-full border border-slate-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            min="1"
+            placeholder="1"
+          />
         </div>
 
       </form>
 
-      <button onclick="saveQuestion()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Save Question</button>
+      <div class="flex justify-end mt-4">
+        <button
+          onclick="saveQuestion()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-sm text-sm font-medium transition"
+        >
+          Save Question
+        </button>
+      </div>
     </div>
 
     <!-- Questions Table -->
-    <div class="bg-white rounded shadow overflow-x-auto">
-      <table class="min-w-full text-sm text-left border">
-        <thead class="bg-gray-200">
+    <div class="bg-white rounded-xl shadow border border-slate-200 overflow-x-auto">
+      <table class="min-w-full text-sm text-left border-collapse">
+        <thead class="bg-slate-100">
           <tr>
             <th class="px-4 py-2 border">ID</th>
             <th class="px-4 py-2 border">Question</th>
             <th class="px-4 py-2 border">Type</th>
+            <th class="px-4 py-2 border">Mandatory</th>
             <th class="px-4 py-2 border">Order</th>
             <th class="px-4 py-2 border">Status</th>
             <th class="px-4 py-2 border">Actions</th>
@@ -96,8 +162,9 @@
 <script>
 const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
 if (!localStorage.getItem("loggedIn")) {
-      window.location.href = "login.html";
-    }
+  window.location.href = "login.html";
+}
+
 // BACK
 function goBack() {
   window.location.href = "dashboard.html";
@@ -113,15 +180,25 @@ async function loadQuestions() {
 
   data.forEach(q => {
     body.innerHTML += `
-      <tr class="border">
+      <tr class="border hover:bg-slate-50 transition">
         <td class="px-4 py-2 border">${q.questionid}</td>
-        <td class="px-4 py-2 border">${q.question}</td>
-        <td class="px-4 py-2 border">${q.questiontype}</td>
-        <td class="px-4 py-2 border">${q.question_order}</td>
-        <td class="px-4 py-2 border">${q.del_flag == 1 ? 'Deleted' : 'Active'}</td>
+        <td class="px-4 py-2 border max-w-xs">
+          <div class="text-sm font-medium text-slate-800 truncate" title="${q.question}">${q.question}</div>
+        </td>
+        <td class="px-4 py-2 border capitalize">${q.questiontype}</td>
+        <td class="px-4 py-2 border">
+          ${q.mandatory ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Yes</span>' : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">No</span>'}
+        </td>
+        <td class="px-4 py-2 border text-center">${q.question_order ?? ''}</td>
+        <td class="px-4 py-2 border">
+          ${q.del_flag == 1
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">Deleted</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>'
+          }
+        </td>
         <td class="px-4 py-2 border space-x-2">
-          <button onclick='editQuestion(${JSON.stringify(q)})' class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-          <button onclick='deleteQuestion(${q.questionid})' class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+          <button onclick='editQuestion(${JSON.stringify(q)})' class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-medium transition">Edit</button>
+          <button onclick='deleteQuestion(${q.questionid})' class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-medium transition">Delete</button>
         </td>
       </tr>
     `;
@@ -141,7 +218,8 @@ function editQuestion(q) {
   document.getElementById("option4").value = q.option4 || "";
   document.getElementById("option5").value = q.option5 || "";
   document.getElementById("option6").value = q.option6 || "";
-  document.getElementById("question_order").value = q.question_order;
+  document.getElementById("question_order").value = q.question_order ?? "";
+  document.getElementById("mandatory").checked = !!q.mandatory;
 }
 
 // SAVE QUESTION
@@ -156,7 +234,8 @@ async function saveQuestion() {
     option4: document.getElementById("option4").value,
     option5: document.getElementById("option5").value,
     option6: document.getElementById("option6").value,
-    question_order: document.getElementById("question_order").value
+    question_order: document.getElementById("question_order").value,
+    mandatory: document.getElementById("mandatory").checked ? 1 : 0
   };
 
   await fetch(API_URL + "/questions", {
@@ -168,6 +247,7 @@ async function saveQuestion() {
   alert("Saved successfully");
   loadQuestions();
   document.getElementById("questionForm").reset();
+  document.getElementById("mandatory").checked = false;
 }
 
 // DELETE FLAG
