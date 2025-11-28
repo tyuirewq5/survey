@@ -149,12 +149,17 @@
     }
 
     // Get response ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const responseId = urlParams.get('responseid');
+    // Get response ID from URL and clean decimal .0 if present
+      const urlParams = new URLSearchParams(window.location.search);
+      let responseId = urlParams.get('responseid');
+      if (responseId) {
+        responseId = responseId.replace('.0', '');
+      }
+      
+      if (!responseId) {
+        document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
+      }
 
-    if (!responseId) {
-      document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
-    }
 
     // Format time ago
     function formatTimeAgo(dateStr) {
