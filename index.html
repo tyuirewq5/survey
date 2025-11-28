@@ -144,9 +144,8 @@ async function login() {
   statusBox.className = "status ok";
   statusBox.textContent = "Login successful!";
   statusBox.style.display = "block";
-
+  localStorage.setItem("loggedIn", "true");
   setTimeout(() => {
-    localStorage.setItem("loggedIn", "true");
     window.location.href = "dashboard.html";
   }, 700);
 
