@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard</title>
+  <title>Survey Dashboard</title>
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
 <body class="bg-gray-100">
 
   <!-- Navbar -->
-  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between">
+  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
     <h1 class="text-xl font-bold">Survey Dashboard</h1>
     <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">Logout</button>
   </div>
@@ -22,7 +22,13 @@
 
     <h2 class="text-2xl font-semibold mb-4">All Survey Responses</h2>
 
-    <!-- Table -->
+    <!-- Export Button -->
+    <button onclick="exportTableToExcel()"
+      class="bg-green-600 text-white px-4 py-2 rounded shadow mb-4">
+      Export to Excel
+    </button>
+
+    <!-- Table Container -->
     <div class="overflow-x-auto bg-white rounded shadow">
       <table class="min-w-full text-sm text-left border">
         <thead class="bg-gray-200">
@@ -32,7 +38,6 @@
             <th class="px-4 py-2 border">Email</th>
             <th class="px-4 py-2 border">Phone</th>
             <th class="px-4 py-2 border">Created At</th>
-            <th class="px-4 py-2 border">Actions</th>
           </tr>
         </thead>
         <tbody id="responseBody"></tbody>
@@ -44,42 +49,78 @@
 <script>
 const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
 
-// Check login
+// -------------------------------
+// LOGIN PROTECTION
+// -------------------------------
 if (!localStorage.getItem("loggedIn")) {
   window.location.href = "index.html";
 }
 
-// Logout function
+// -------------------------------
+// LOGOUT
+// -------------------------------
 function logout() {
   localStorage.removeItem("loggedIn");
-  window.location.href = "login.html";
+  window.location.href = "index.html";
 }
 
-// Fetch responses
+// -------------------------------
+// LOAD RESPONSES
+// -------------------------------
 async function loadResponses() {
-  const res = await fetch(API_URL + "/responses");
-  const data = await res.json();
+  try {
+    const res = await fetch(API_URL + "/responses");
+    const data = await res.json();
 
-  const body = document.getElementById("responseBody");
-  body.innerHTML = "";
+    const body = document.getElementById("responseBody");
+    body.innerHTML = "";
 
-  data.forEach(row => {
-    body.innerHTML += `
-      <tr class="border">
-        <td class="px-4 py-2 border">${row.id}</td>
-        <td class="px-4 py-2 border">${row.name}</td>
-        <td class="px-4 py-2 border">${row.email}</td>
-        <td class="px-4 py-2 border">${row.phone}</td>
-        <td class="px-4 py-2 border">${row.created_at}</td>
-        <td class="px-4 py-2 border">
-          <button class="bg-blue-500 text-white px-2 py-1 rounded">View</button>
-        </td>
-      </tr>
-    `;
-  });
+    data.forEach(row => {
+      body.innerHTML += `
+        <tr class="border">
+          <td class="px-4 py-2 border">${row.id}</td>
+          <td class="px-4 py-2 border">${row.name}</td>
+          <td class="px-4 py-2 border">${row.email}</td>
+          <td class="px-4 py-2 border">${row.phone}</td>
+          <td class="px-4 py-2 border">${row.created_at}</td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    console.error("Error loading data:", err);
+  }
 }
 
 loadResponses();
+
+// -------------------------------
+// EXPORT TO EXCEL (CSV)
+// -------------------------------
+function exportTableToExcel() {
+  const table = document.querySelector("table");
+  let csv = [];
+  const rows = table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("td, th");
+    const rowData = [];
+    cols.forEach(col => {
+      rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+    });
+    csv.push(rowData.join(","));
+  });
+
+  const csvString = csv.join("\n");
+  const blob = new Blob([csvString], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "survey_responses.csv";
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
 </script>
 
 </body>
