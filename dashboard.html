@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,20 +8,25 @@
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
 </head>
+
 <body class="bg-gray-100">
 
   <!-- Navbar -->
   <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
     <h1 class="text-xl font-bold">Survey Dashboard</h1>
-    <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">Logout</button>
-    <!-- Manage Questions Button -->
-<button onclick="window.location.href='questions.html'"
-  class="bg-blue-600 text-white px-4 py-2 rounded shadow mb-4 ml-2">
-  Manage Questions
-</button>
 
+    <div class="flex items-center space-x-3">
+      <!-- Manage Questions Button -->
+      <button onclick="window.location.href='questions.html'"
+        class="bg-white text-blue-600 px-4 py-2 rounded shadow">
+        Manage Questions
+      </button>
+
+      <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">
+        Logout
+      </button>
+    </div>
   </div>
 
   <!-- Container -->
@@ -39,11 +45,11 @@
       <table class="min-w-full text-sm text-left border">
         <thead class="bg-gray-200">
           <tr>
-            <th class="px-4 py-2 border">ID</th>
+            <th class="px-4 py-2 border">S.No</th>
+            <th class="px-4 py-2 border">Response ID</th>
             <th class="px-4 py-2 border">Name</th>
-            <th class="px-4 py-2 border">Email</th>
-            <th class="px-4 py-2 border">Phone</th>
-            <th class="px-4 py-2 border">Created At</th>
+            <th class="px-4 py-2 border">Filled On</th>
+            <th class="px-4 py-2 border">Action</th>
           </tr>
         </thead>
         <tbody id="responseBody"></tbody>
@@ -52,82 +58,117 @@
 
   </div>
 
-<script>
-const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+  <script>
+    const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
 
-// -------------------------------
-// LOGIN PROTECTION
-// -------------------------------
-if (!localStorage.getItem("loggedIn")) {
-  window.location.href = "index.html";
-}
+    // -------------------------------
+    // LOGIN PROTECTION
+    // -------------------------------
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "index.html";
+    }
 
-// -------------------------------
-// LOGOUT
-// -------------------------------
-function logout() {
-  localStorage.removeItem("loggedIn");
-  window.location.href = "index.html";
-}
+    // -------------------------------
+    // LOGOUT
+    // -------------------------------
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "index.html";
+    }
 
-// -------------------------------
-// LOAD RESPONSES
-// -------------------------------
-async function loadResponses() {
-  try {
-    const res = await fetch(API_URL + "/responses");
-    const data = await res.json();
+    // -------------------------------
+    // LOAD RESPONSES (GROUPED BY responseid)
+    // -------------------------------
+    async function loadResponses() {
+      try {
+        const res = await fetch(API_URL + "/responses");
+        const data = await res.json();
 
-    const body = document.getElementById("responseBody");
-    body.innerHTML = "";
+        const body = document.getElementById("responseBody");
+        body.innerHTML = "";
 
-    data.forEach(row => {
-      body.innerHTML += `
-        <tr class="border">
-          <td class="px-4 py-2 border">${row.id}</td>
-          <td class="px-4 py-2 border">${row.name}</td>
-          <td class="px-4 py-2 border">${row.email}</td>
-          <td class="px-4 py-2 border">${row.phone}</td>
-          <td class="px-4 py-2 border">${row.created_at}</td>
-        </tr>
-      `;
-    });
+        let grouped = {};
 
-  } catch (err) {
-    console.error("Error loading data:", err);
-  }
-}
+        // Group responses into a single row per responseid
+        data.forEach(row => {
+          if (!grouped[row.responseid]) {
+            grouped[row.responseid] = {
+              responseid: row.responseid,
+              name: "",
+              filled_on: row.created_at
+            };
+          }
 
-loadResponses();
+          // Question ID = 1 → Name
+          if (row.questionid == 1) {
+            grouped[row.responseid].name = row.answer;
+          }
 
-// -------------------------------
-// EXPORT TO EXCEL (CSV)
-// -------------------------------
-function exportTableToExcel() {
-  const table = document.querySelector("table");
-  let csv = [];
-  const rows = table.querySelectorAll("tr");
+          // Update filled time (latest)
+          grouped[row.responseid].filled_on = row.created_at;
+        });
 
-  rows.forEach(row => {
-    const cols = row.querySelectorAll("td, th");
-    const rowData = [];
-    cols.forEach(col => {
-      rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
-    });
-    csv.push(rowData.join(","));
-  });
+        let sno = 1;
 
-  const csvString = csv.join("\n");
-  const blob = new Blob([csvString], { type: "text/csv" });
-  const url = window.URL.createObjectURL(blob);
+        Object.values(grouped).forEach(item => {
+          body.innerHTML += `
+            <tr class="border">
+              <td class="px-4 py-2 border">${sno++}</td>
+              <td class="px-4 py-2 border">${item.responseid}</td>
+              <td class="px-4 py-2 border">${item.name || "—"}</td>
+              <td class="px-4 py-2 border">${item.filled_on}</td>
+              <td class="px-4 py-2 border">
+                <button onclick="viewResponse('${item.responseid}')"
+                  class="bg-blue-600 text-white px-3 py-1 rounded">
+                  View
+                </button>
+              </td>
+            </tr>
+          `;
+        });
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "survey_responses.csv";
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
-</script>
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    }
+
+    loadResponses();
+
+    // -------------------------------
+    // VIEW RESPONSE PAGE
+    // -------------------------------
+    function viewResponse(responseid) {
+      window.location.href = "view-response.html?responseid=" + responseid;
+    }
+
+    // -------------------------------
+    // EXPORT TO CSV
+    // -------------------------------
+    function exportTableToExcel() {
+      const table = document.querySelector("table");
+      let csv = [];
+      const rows = table.querySelectorAll("tr");
+
+      rows.forEach(row => {
+        const cols = row.querySelectorAll("td, th");
+        const rowData = [];
+        cols.forEach(col => {
+          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+        });
+        csv.push(rowData.join(","));
+      });
+
+      const csvString = csv.join("\n");
+      const blob = new Blob([csvString], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "survey_responses.csv";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  </script>
 
 </body>
 </html>
