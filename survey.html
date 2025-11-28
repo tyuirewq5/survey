@@ -1,147 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dynamic Survey Form</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #0b1220;
+      --accent: #7c3aed;
+      --muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#020617 0%, #061428 60%);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #e6eef8;
+    }
+    .container {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 28px;
+      align-items: center;
+    }
+    .hero {
+      padding: 28px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .hero h1 { margin: 0 0 8px 0; font-size: 28px; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 22px;
+      border-radius: 12px;
+    }
+    .tabs { display:flex; gap:8px; margin-bottom: 18px; }
+    .tab {
+      flex: 1;
+      padding:10px 12px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 8px;
+      text-align:center;
+      cursor:pointer;
+      color:var(--muted);
+      user-select:none;
+    }
+    .tab.active { background: linear-gradient(90deg, rgba(124,58,237,0.16), rgba(124,58,237,0.08)); color: #fff; box-shadow: 0 6px 18px rgba(124,58,237,0.08); }
+    form { display:flex; flex-direction:column; gap:12px; }
+    label { font-size:13px; color:var(--muted); }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.01);
+      color: #e6eef8;
+      font-size:14px;
+      outline: none;
+    }
+    .row { display:flex; gap:8px; }
+    button.primary {
+      background: linear-gradient(90deg, var(--accent), #5b21b6);
+      color:white;
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.ghost {
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      color:var(--muted);
+      padding:10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .muted { color:var(--muted); font-size:13px; }
+    .status { font-size:13px; padding:8px 10px; border-radius:8px; }
+    .status.ok { background: rgba(16,185,129,0.08); color:var(--success); border:1px solid rgba(16,185,129,0.08); }
+    .status.err { background: rgba(239,68,68,0.06); color:var(--danger); border:1px solid rgba(239,68,68,0.06); }
+    .small-link { color: #c7b3ff; cursor:pointer; text-decoration: underline; font-size:13px; }
+    .center { text-align:center; }
+    @media (max-width: 880px) {
+      .container { grid-template-columns: 1fr; }
+      .hero { order: 2; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
 
-  <!-- Navbar -->
-  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Survey Form</h1>
-  </div>
+<body>
 
-  <!-- Container -->
-  <div class="p-6 max-w-3xl mx-auto">
+  <div class="card">
+    <h2>Admin Login</h2>
+    <p style="color:var(--muted); margin-top:-6px;">Enter your credentials to continue</p>
 
-    <div id="formContainer" class="bg-white shadow rounded p-6"></div>
+    <div id="statusBox" class="status"></div>
 
-    <button id="submitBtn" onclick="submitSurvey()" class="mt-6 bg-green-600 text-white px-6 py-2 rounded">
-      Submit Survey
-    </button>
+    <form id="loginForm" onsubmit="event.preventDefault(); login();">
+      <label>Username</label>
+      <input id="username" type="text" required />
 
+      <label>Password</label>
+      <input id="password" type="password" required />
+
+      <button class="primary" type="submit">Login</button>
+    </form>
   </div>
 
 <script>
-const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
-let QUESTIONS = [];
+const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev"; // ← change this!
 
-// Load Questions
-async function loadQuestions() {
-  const res = await fetch(API_URL + "/questions");
-  QUESTIONS = await res.json();
-  renderForm();
-}
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const statusBox = document.getElementById("statusBox");
 
-// Render Form Dynamically
-function renderForm() {
-  const container = document.getElementById("formContainer");
-  container.innerHTML = "";
+  statusBox.style.display = "none";
 
-  QUESTIONS.forEach(q => {
-    let html = ``;
-
-    if (q.questiontype === "text") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          <input type='text' id='q_${q.questionid}' class='w-full border p-2 rounded' />
-        </div>
-      `;
-    }
-
-    if (q.questiontype === "single") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          ${renderOptions(q, "single")}
-        </div>
-      `;
-    }
-
-    if (q.questiontype === "multiple") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          ${renderOptions(q, "multiple")}
-        </div>
-      `;
-    }
-
-    container.innerHTML += html;
-  });
-}
-
-function renderOptions(q, type) {
-  const opts = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6];
-
-  return opts
-    .filter(o => o && o.trim() !== "")
-    .map(o => {
-      if (type === "single") {
-        return `
-          <label class='flex items-center space-x-2 mb-1'>
-            <input type='radio' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
-            <span>${o}</span>
-          </label>
-        `;
-      }
-
-      return `
-        <label class='flex items-center space-x-2 mb-1'>
-          <input type='checkbox' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
-          <span>${o}</span>
-        </label>
-      `;
-    })
-    .join("");
-}
-
-// Submit Survey
-async function submitSurvey() {
-  const responseID = Date.now(); // simple unique id
-  let payload = [];
-
-  QUESTIONS.forEach(q => {
-    let value = "";
-
-    if (q.questiontype === "text") {
-      value = document.getElementById(`q_${q.questionid}`).value;
-    }
-
-    if (q.questiontype === "single") {
-      const selected = document.querySelector(`input[name='q_${q.questionid}']:checked`);
-      value = selected ? selected.value : "";
-    }
-
-    if (q.questiontype === "multiple") {
-      const selected = [...document.querySelectorAll(`input[name='q_${q.questionid}']:checked`)].map(c => c.value);
-      value = selected.join(",");
-    }
-
-    payload.push({
-      responseid: responseID,
-      questionid: q.questionid,
-      answer: value
-    });
+  const res = await fetch(API_URL + "/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
   });
 
-  // Save one-by-one
-  for (const row of payload) {
-    await fetch(API_URL + "/save-response", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(row)
-    });
-  }
+  const data = await res.json();
 
-  alert("Survey submitted successfully!");
-  window.location.reload();
+  if (data.success) {
+  statusBox.className = "status ok";
+  statusBox.textContent = "Login successful!";
+  statusBox.style.display = "block";
+  localStorage.setItem("loggedIn", "true");
+  setTimeout(() => {
+    window.location.href = "dashboard.html";
+  }, 700);
+
+} else {
+  statusBox.className = "status err";
+  statusBox.textContent = data.error || "Invalid login";
+  statusBox.style.display = "block";
 }
 
-loadQuestions();
+}
 </script>
+
 </body>
 </html>
