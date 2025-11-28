@@ -233,7 +233,7 @@
     // LOAD RESPONSES (GROUPED BY responseid)
     async function loadResponses() {
       try {
-        const res = await fetch(API_URL + "/responses");
+        const res = await fetch(API_URL + "/respes");
         const data = await res.json();
 
         const body = document.getElementById("responseBody");
