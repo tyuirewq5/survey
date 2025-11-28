@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Question Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Navbar -->
+  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Manage Questions</h1>
+    <button onclick="goBack()" class="bg-white text-blue-600 px-4 py-1 rounded">Back</button>
+  </div>
+
+  <!-- Container -->
+  <div class="p-6 max-w-5xl mx-auto">
+
+    <h2 class="text-2xl font-semibold mb-4">Add / Edit Questions</h2>
+
+    <!-- Question Form -->
+    <div class="bg-white rounded shadow p-4 mb-8">
+      <form id="questionForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <input type="hidden" id="questionid" />
+
+        <div>
+          <label class="font-semibold">Question</label>
+          <input id="question" class="w-full border p-2 rounded" required />
+        </div>
+
+        <div>
+          <label class="font-semibold">Question Type</label>
+          <select id="questiontype" class="w-full border p-2 rounded">
+            <option value="text">Text</option>
+            <option value="single">Single Choice</option>
+            <option value="multiple">Multiple Choice</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold">Option 1</label>
+          <input id="option1" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label class="font-semibold">Option 2</label>
+          <input id="option2" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label class="font-semibold">Option 3</label>
+          <input id="option3" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label class="font-semibold">Option 4</label>
+          <input id="option4" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label class="font-semibold">Option 5</label>
+          <input id="option5" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label class="font-semibold">Option 6</label>
+          <input id="option6" class="w-full border p-2 rounded" />
+        </div>
+
+        <div>
+          <label class="font-semibold">Order</label>
+          <input id="question_order" type="number" class="w-full border p-2 rounded" />
+        </div>
+
+      </form>
+
+      <button onclick="saveQuestion()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Save Question</button>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="bg-white rounded shadow overflow-x-auto">
+      <table class="min-w-full text-sm text-left border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 border">ID</th>
+            <th class="px-4 py-2 border">Question</th>
+            <th class="px-4 py-2 border">Type</th>
+            <th class="px-4 py-2 border">Order</th>
+            <th class="px-4 py-2 border">Status</th>
+            <th class="px-4 py-2 border">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="questionBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+<script>
+const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+
+// BACK
+function goBack() {
+  window.location.href = "dashboard.html";
+}
+
+// LOAD QUESTIONS
+async function loadQuestions() {
+  const res = await fetch(API_URL + "/questions");
+  const data = await res.json();
+
+  const body = document.getElementById("questionBody");
+  body.innerHTML = "";
+
+  data.forEach(q => {
+    body.innerHTML += `
+      <tr class="border">
+        <td class="px-4 py-2 border">${q.questionid}</td>
+        <td class="px-4 py-2 border">${q.question}</td>
+        <td class="px-4 py-2 border">${q.questiontype}</td>
+        <td class="px-4 py-2 border">${q.question_order}</td>
+        <td class="px-4 py-2 border">${q.del_flag == 1 ? 'Deleted' : 'Active'}</td>
+        <td class="px-4 py-2 border space-x-2">
+          <button onclick='editQuestion(${JSON.stringify(q)})' class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+          <button onclick='deleteQuestion(${q.questionid})' class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+loadQuestions();
+
+// EDIT
+function editQuestion(q) {
+  document.getElementById("questionid").value = q.questionid;
+  document.getElementById("question").value = q.question;
+  document.getElementById("questiontype").value = q.questiontype;
+  document.getElementById("option1").value = q.option1 || "";
+  document.getElementById("option2").value = q.option2 || "";
+  document.getElementById("option3").value = q.option3 || "";
+  document.getElementById("option4").value = q.option4 || "";
+  document.getElementById("option5").value = q.option5 || "";
+  document.getElementById("option6").value = q.option6 || "";
+  document.getElementById("question_order").value = q.question_order;
+}
+
+// SAVE QUESTION
+async function saveQuestion() {
+  const q = {
+    questionid: document.getElementById("questionid").value,
+    question: document.getElementById("question").value,
+    questiontype: document.getElementById("questiontype").value,
+    option1: document.getElementById("option1").value,
+    option2: document.getElementById("option2").value,
+    option3: document.getElementById("option3").value,
+    option4: document.getElementById("option4").value,
+    option5: document.getElementById("option5").value,
+    option6: document.getElementById("option6").value,
+    question_order: document.getElementById("question_order").value
+  };
+
+  await fetch(API_URL + "/questions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(q)
+  });
+
+  alert("Saved successfully");
+  loadQuestions();
+  document.getElementById("questionForm").reset();
+}
+
+// DELETE FLAG
+async function deleteQuestion(id) {
+  const yes = confirm("Are you sure?");
+  if (!yes) return;
+
+  await fetch(API_URL + `/questions/delete/${id}`, { method: "POST" });
+  loadQuestions();
+}
+</script>
+
+</body>
+</html>
