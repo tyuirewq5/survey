@@ -1,307 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>View Response</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Response - Survey Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Small polish */
-    .glass {
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(6px);
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'ui-sans-serif', 'system-ui']
+          }
+        }
+      }
     }
-    .card-shadow {
-      box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+  </script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .metric-glow {
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+      50% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+    }
+    .pulse-glow {
+      animation: pulse-glow 2s infinite;
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-sky-50 min-h-screen text-slate-800">
 
-  <!-- NAV -->
-  <header class="max-w-6xl mx-auto p-6 flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <button onclick="goBack()" class="p-2 rounded-md bg-white/90 hover:bg-white card-shadow">
-        <!-- back icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h1 class="text-2xl font-semibold">Response Viewer</h1>
-    </div>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white font-sans">
+  
+  <!-- Floating particles -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+    <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+    <div class="absolute top-40 left-40 w-80 h-80 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+  </div>
 
-    <div class="flex items-center gap-3">
-      <button id="downloadJsonBtn" class="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Download JSON</button>
-      <button id="exportCsvBtn" class="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Export CSV</button>
-      <button id="printBtn" class="px-3 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700">Print</button>
-    </div>
-  </header>
-
-  <!-- MAIN -->
-  <main class="max-w-6xl mx-auto p-6">
-    <!-- Summary -->
-    <section id="summary" class="glass card-shadow rounded-xl p-6 mb-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <!-- Navbar -->
+  <nav class="glass backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
+    <div class="px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <button onclick="window.history.back()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <div>
-          <div class="text-sm text-slate-500">Response ID</div>
-          <div id="summaryResponseId" class="text-lg font-bold text-slate-700"></div>
-        </div>
-
-        <div>
-          <div class="text-sm text-slate-500">Name</div>
-          <div id="summaryName" class="text-lg font-semibold text-slate-800">—</div>
-        </div>
-
-        <div>
-          <div class="text-sm text-slate-500">Filled On</div>
-          <div id="summaryFilledOn" class="text-lg font-medium text-slate-700">—</div>
-        </div>
-
-        <div>
-          <div class="text-sm text-slate-500">Questions Answered</div>
-          <div id="summaryCount" class="text-lg font-medium text-slate-700">0</div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Response Details</h1>
+          <p class="text-sm text-slate-300" id="responseMeta"></p>
         </div>
       </div>
-    </section>
-
-    <!-- Answers timeline -->
-    <section id="answersSection" class="space-y-4">
-      <!-- dynamic content will be inserted here -->
-      <div id="loader" class="flex items-center justify-center p-10">
-        <svg class="animate-spin h-8 w-8 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-        </svg>
+      <div class="flex items-center space-x-2">
+        <button onclick="exportResponse()" 
+                class="glass-hover px-4 py-2 rounded-xl text-sm font-medium border border-white/20 hover:border-white/40 transition-all duration-300">
+          <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10l-5.5 5.5m0 0L7.5 18M7.5 18l-.5.5m5.5-11L17 15m-3-7h3m-3 4h3" />
+          </svg>
+          Export
+        </button>
+        <button onclick="window.history.back()" 
+                class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 px-6 py-2 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+          Back to Dashboard
+        </button>
       </div>
-    </section>
+    </div>
+  </nav>
 
-    <!-- Footer actions -->
-    <section class="mt-8 flex justify-end gap-3">
-      <button onclick="goBack()" class="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">Back to Dashboard</button>
-    </section>
-  </main>
+  <!-- Main Container -->
+  <div class="px-6 py-12 max-w-4xl mx-auto relative z-10 space-y-8">
+    
+    <!-- Response Header Card -->
+    <div id="responseHeader" class="glass-hover rounded-3xl p-8 metric-glow transition-all duration-700 hover:scale-[1.02] animate-fade-in-up">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 bg-gradient-to-r from-indigo-400/30 to-purple-400/30 rounded-2xl flex items-center justify-center pulse-glow">
+            <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-slate-400 text-sm font-medium uppercase tracking-wider">Response ID</p>
+            <p id="responseId" class="text-3xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent mt-1"></p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div class="text-center">
+            <p class="text-slate-400 text-sm">Submitted</p>
+            <p id="submittedTime" class="text-xl font-bold text-white"></p>
+          </div>
+          <div class="w-px bg-white/20 h-12 sm:block hidden"></div>
+          <div class="text-center">
+            <p class="text-slate-400 text-sm">Respondent</p>
+            <p id="respondentName" class="text-xl font-bold text-white"></p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<script>
-  const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+    <!-- Answers Grid -->
+    <div class="glass backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10">
+      <h2 class="text-3xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent mb-8 flex items-center">
+        <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        Survey Answers
+      </h2>
+      
+      <div id="answersContainer" class="space-y-6">
+        <!-- Answers will load here -->
+      </div>
+    </div>
 
-  // protect route - same check as other pages
-  if (!localStorage.getItem("loggedIn")) {
-    // small delay so page doesn't flicker
-    setTimeout(() => window.location.href = "index.html", 200);
-  }
+  </div>
 
-  // parse responseid from query string
-  const params = new URLSearchParams(location.search);
-  const RESPONSE_ID = params.get("responseid");
+  <script>
+    const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+    
+    // LOGIN PROTECTION
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "login.html";
+    }
 
-  if (!RESPONSE_ID) {
-    document.getElementById("answersSection").innerHTML = `
-      <div class="p-6 bg-white rounded shadow text-center">
-        <div class="text-lg font-semibold">No response selected</div>
-        <div class="text-sm text-slate-500 mt-2">Please open this page with ?responseid=...</div>
-      </div>`;
-    throw new Error("Missing responseid");
-  }
+    // Get response ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const responseId = urlParams.get('responseid');
 
-  // UI elements
-  const elResponseId = document.getElementById("summaryResponseId");
-  const elName = document.getElementById("summaryName");
-  const elFilledOn = document.getElementById("summaryFilledOn");
-  const elCount = document.getElementById("summaryCount");
-  const answersSection = document.getElementById("answersSection");
-  const loader = document.getElementById("loader");
+    if (!responseId) {
+      document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
+    }
 
-  elResponseId.innerText = RESPONSE_ID;
+    // Format time ago
+    function formatTimeAgo(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = now - date;
+      
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return `${seconds}s ago`;
+    }
 
-  // fetch function tries targeted endpoint first, else falls back to all results
-  async function fetchResponseRows(responseid) {
-    // try /responses?responseid=...
-    try {
-      const q = `${API_URL}/responses?responseid=${encodeURIComponent(responseid)}`;
-      const r = await fetch(q);
-      if (r.ok) {
-        const json = await r.json();
-        // expecting either array of rows or an object with results
-        if (Array.isArray(json)) return json;
-        if (json && Array.isArray(json.results)) return json.results;
+    // Load response data
+    async function loadResponse() {
+      try {
+        const res = await fetch(`${API_URL}/responses?responseid=${responseId}`);
+        const responses = await res.json();
+
+        if (responses.length === 0) {
+          document.getElementById("answersContainer").innerHTML = '<div class="text-center py-20 text-slate-400">No responses found</div>';
+          return;
+        }
+
+        // Get questions for context
+        const qRes = await fetch(`${API_URL}/questions`);
+        const questions = await qRes.json();
+        const activeQuestions = questions.filter(q => q.del_flag != 1);
+
+        // Group responses by question
+        const grouped = {};
+        responses.forEach(r => {
+          grouped[r.questionid] = r.answer;
+        });
+
+        // Update header
+        const nameQuestion = activeQuestions.find(q => q.questionid == 1);
+        document.getElementById("responseId").textContent = `#${responseId.slice(-8)}`;
+        document.getElementById("respondentName").textContent = grouped[1] || "Anonymous";
+        document.getElementById("submittedTime").textContent = formatTimeAgo(responses[0].created_at);
+        document.getElementById("responseMeta").textContent = `Submitted ${formatTimeAgo(responses[0].created_at)} • ${responses.length} answers`;
+
+        // Render answers
+        const container = document.getElementById("answersContainer");
+        container.innerHTML = "";
+
+        activeQuestions.forEach((q, index) => {
+          const answer = grouped[q.questionid] || "No response";
+          const html = createAnswerCard(q, answer, index);
+          container.innerHTML += html;
+        });
+
+      } catch (err) {
+        console.error("Error loading response:", err);
+        document.getElementById("answersContainer").innerHTML = '<div class="text-center py-20 text-red-400">Failed to load response data</div>';
       }
-    } catch (e) {
-      console.warn("Query endpoint failed, falling back to full fetch:", e);
     }
 
-    // fallback: get all and filter client-side
-    const allRes = await fetch(API_URL + "/responses");
-    if (!allRes.ok) throw new Error("Failed to fetch responses");
-    const allJson = await allRes.json();
-    // support env.DB.prepare(...).all() style (returns { results: [...] }) or plain array
-    const rows = Array.isArray(allJson) ? allJson : (allJson.results || []);
-    return rows.filter(r => String(r.responseid) === String(responseid));
-  }
+    // Create individual answer card
+    function createAnswerCard(q, answer, index) {
+      const delay = index * 100;
+      let answerContent = "";
 
-  // render the response nicely
-  function renderRows(rows) {
-    loader?.remove();
-
-    if (!rows || rows.length === 0) {
-      answersSection.innerHTML = `
-        <div class="p-6 bg-white rounded shadow text-center">
-          <div class="text-lg font-semibold">No answers found for this Response ID</div>
-          <div class="text-sm text-slate-500 mt-2">Maybe the ID is incorrect or the submission didn't complete.</div>
-        </div>`;
-      return;
-    }
-
-    // find name (questionid == 1)
-    const nameRow = rows.find(r => Number(r.questionid) === 1);
-    const name = nameRow ? nameRow.answer : "—";
-    elName.innerText = name;
-
-    // filled_on → earliest created_at (or latest depending on your preference)
-    const times = rows.map(r => r.created_at).filter(Boolean);
-    const filledOn = times.length ? new Date(times.sort()[0]).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : "—";
-    elFilledOn.innerText = filledOn;
-    elCount.innerText = rows.length;
-
-    // We will display a sorted list by questionid (or created_at fallback)
-    rows.sort((a,b) => {
-      // try numeric questionid
-      const qa = Number(a.questionid) || 0;
-      const qb = Number(b.questionid) || 0;
-      if (qa && qb) return qa - qb;
-      // fallback to created_at
-      return new Date(a.created_at) - new Date(b.created_at);
-    });
-
-    // Build HTML: timeline style
-    const timelineHtml = [];
-    rows.forEach((r, i) => {
-      const qid = r.questionid;
-      const answer = r.answer ?? "—";
-      const time = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : "";
-      timelineHtml.push(`
-        <article class="bg-white rounded-xl p-6 card-shadow">
-          <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-sky-50 text-sky-600 font-semibold">
-              Q${qid}
+      if (q.questiontype === "single" || q.questiontype === "multiple") {
+        const options = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6]
+          .filter(o => o && o.trim());
+        
+        if (q.questiontype === "multiple") {
+          const answers = answer ? answer.split(',') : [];
+          answerContent = `
+            <div class="space-y-2">
+              ${options.map(opt => `
+                <div class="flex items-center space-x-3 p-3 rounded-xl bg-white/5 ${answers.includes(opt) ? 'ring-2 ring-emerald-400/30 border-emerald-400/50' : 'border border-white/10'}">
+                  <div class="w-4 h-4 rounded ${answers.includes(opt) ? 'bg-emerald-400' : 'bg-white/20'}"></div>
+                  <span class="text-sm text-white">${opt}</span>
+                </div>
+              `).join('')}
             </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <h3 class="font-semibold text-slate-800">Question ID: ${qid}</h3>
-                <div class="text-sm text-slate-500">${time}</div>
-              </div>
-              <p class="mt-3 text-slate-700">${escapeHtml(answer)}</p>
+          `;
+        } else {
+          answerContent = options.map(opt => 
+            opt === answer ? 
+            `<div class="flex items-center space-x-3 p-4 rounded-xl bg-emerald-500/20 border-2 border-emerald-400/50">
+              <div class="w-5 h-5 bg-emerald-400 rounded-full"></div>
+              <span class="font-semibold text-white">${answer}</span>
+            </div>` : ''
+          ).join('');
+        }
+      } else if (q.questiontype === "rating_1_10") {
+        const rating = parseInt(answer) || 0;
+        answerContent = `
+          <div class="flex items-center space-x-3">
+            <div class="flex -space-x-1">
+              ${Array(5).fill().map((_, i) => `
+                <div class="w-6 h-6 bg-gradient-to-r ${i < Math.floor(rating/2) ? 'from-yellow-400 to-yellow-500' : 'from-gray-600 to-gray-700'} rounded-full shadow-lg"></div>
+              `).join('')}
+            </div>
+            <span class="text-2xl font-bold text-yellow-400">${rating}</span>
+            <span class="text-sm text-slate-400">/10</span>
+          </div>
+        `;
+      } else {
+        answerContent = `<p class="text-lg font-semibold text-white break-words">${answer}</p>`;
+      }
+
+      return `
+        <div class="glass-hover rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300" style="animation-delay: ${delay}ms">
+          <div class="flex items-start space-x-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl flex items-center justify-center mt-1">
+              <span class="text-xs font-bold text-indigo-300">${q.questionid}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-white text-lg mb-3 leading-tight">${q.question}</h3>
+              ${q.mandatory ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300 border border-red-500/30 mb-3">Required</span>' : ''}
+              <div class="mt-4">${answerContent}</div>
+              ${q.questiontype !== 'text' && q.questiontype !== 'number' && q.questiontype !== 'email' && q.questiontype !== 'phone' ? '' : 
+                `<p class="text-xs text-slate-500 mt-3">Type: ${q.questiontype.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>`
+              }
             </div>
           </div>
-        </article>
-      `);
-    });
-
-    answersSection.innerHTML = timelineHtml.join("\n");
-  }
-
-  // small helper to escape HTML in answer text
-  function escapeHtml(text) {
-    if (text === null || text === undefined) return "—";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  // Export JSON
-  function downloadJSON(rows) {
-    const data = { responseid: RESPONSE_ID, rows, exported_at: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `response_${RESPONSE_ID}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  // Export CSV (questionid, answer, created_at)
-  function exportCSV(rows) {
-    const header = ["questionid", "answer", "created_at"];
-    const lines = [header.join(",")];
-    rows.forEach(r => {
-      const line = [
-        `"${String(r.questionid).replace(/"/g,'""')}"`,
-        `"${String(r.answer ?? "").replace(/"/g,'""')}"`,
-        `"${String(r.created_at ?? "").replace(/"/g,'""')}"`
-      ];
-      lines.push(line.join(","));
-    });
-    const csv = lines.join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `response_${RESPONSE_ID}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  // Print (prints the main section)
-  function doPrint() {
-    const printWindow = window.open("", "_blank");
-    const style = `
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 20px; color: #111827; }
-        .card { border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 6px 18px rgba(2,6,23,0.08); background:white; }
-        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-      </style>`;
-    const rowsHtml = window._currentRows ? window._currentRows.map(r => `
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;">
-          <strong>Q${escapeHtml(r.questionid)}</strong>
-          <small>${escapeHtml(r.created_at || "")}</small>
         </div>
-        <div style="margin-top:8px">${escapeHtml(r.answer || "—")}</div>
-      </div>
-    `).join("") : "<div>No data</div>";
-    printWindow.document.write(`<html><head><title>Response ${RESPONSE_ID}</title>${style}</head><body>
-      <div class="header"><h2>Response ${RESPONSE_ID}</h2><div>${escapeHtml(elName.innerText)}</div></div>
-      ${rowsHtml}
-    </body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  }
-
-  // go back
-  function goBack() {
-    window.location.href = "dashboard.html";
-  }
-
-  // wire up buttons
-  document.getElementById("downloadJsonBtn").addEventListener("click", () => {
-    if (window._currentRows) downloadJSON(window._currentRows);
-  });
-  document.getElementById("exportCsvBtn").addEventListener("click", () => {
-    if (window._currentRows) exportCSV(window._currentRows);
-  });
-  document.getElementById("printBtn").addEventListener("click", () => doPrint());
-
-  // load and render on start
-  (async function init() {
-    try {
-      const rows = await fetchResponseRows(RESPONSE_ID);
-      // store globally for exports/print
-      window._currentRows = rows;
-      renderRows(rows);
-    } catch (err) {
-      loader?.remove();
-      answersSection.innerHTML = `
-        <div class="p-6 bg-white rounded shadow text-center">
-          <div class="text-lg font-semibold">Failed to load response</div>
-          <div class="text-sm text-rose-600 mt-2">${escapeHtml(err.message)}</div>
-        </div>`;
-      console.error(err);
+      `;
     }
-  })();
-</script>
+
+    // Export current response
+    async function exportResponse() {
+      const res = await fetch(`${API_URL}/responses?responseid=${responseId}`);
+      const responses = await res.json();
+      
+      let csv = "Question ID,Question,Answer\n";
+      responses.forEach(r => {
+        csv += `"${r.questionid}","${r.answer.replace(/"/g, '""')}","${r.answer.replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `response_${responseId}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Load data on page load
+    window.addEventListener('load', loadResponse);
+
+    // Animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+      }
+      .animate-blob { animation: blob 7s infinite; }
+      .animation-delay-2000 { animation-delay: 2s; }
+      .animation-delay-4000 { animation-delay: 4s; }
+    `;
+    document.head.appendChild(style);
+  </script>
 </body>
 </html>
