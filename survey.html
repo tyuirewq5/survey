@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Survey Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Navbar -->
+  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Survey Form</h1>
+  </div>
+
+  <!-- Container -->
+  <div class="p-6 max-w-3xl mx-auto">
+
+    <div id="formContainer" class="bg-white shadow rounded p-6"></div>
+
+    <button id="submitBtn" onclick="submitSurvey()" class="mt-6 bg-green-600 text-white px-6 py-2 rounded">
+      Submit Survey
+    </button>
+
+  </div>
+
+<script>
+const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+let QUESTIONS = [];
+
+// Load Questions
+async function loadQuestions() {
+  const res = await fetch(API_URL + "/questions");
+  QUESTIONS = await res.json();
+  renderForm();
+}
+
+// Render Form Dynamically
+function renderForm() {
+  const container = document.getElementById("formContainer");
+  container.innerHTML = "";
+
+  QUESTIONS.forEach(q => {
+    let html = ``;
+
+    if (q.questiontype === "text") {
+      html = `
+        <div class='mb-6'>
+          <label class='block font-semibold mb-2'>${q.question}</label>
+          <input type='text' id='q_${q.questionid}' class='w-full border p-2 rounded' />
+        </div>
+      `;
+    }
+
+    if (q.questiontype === "single") {
+      html = `
+        <div class='mb-6'>
+          <label class='block font-semibold mb-2'>${q.question}</label>
+          ${renderOptions(q, "single")}
+        </div>
+      `;
+    }
+
+    if (q.questiontype === "multiple") {
+      html = `
+        <div class='mb-6'>
+          <label class='block font-semibold mb-2'>${q.question}</label>
+          ${renderOptions(q, "multiple")}
+        </div>
+      `;
+    }
+
+    container.innerHTML += html;
+  });
+}
+
+function renderOptions(q, type) {
+  const opts = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6];
+
+  return opts
+    .filter(o => o && o.trim() !== "")
+    .map(o => {
+      if (type === "single") {
+        return `
+          <label class='flex items-center space-x-2 mb-1'>
+            <input type='radio' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
+            <span>${o}</span>
+          </label>
+        `;
+      }
+
+      return `
+        <label class='flex items-center space-x-2 mb-1'>
+          <input type='checkbox' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
+          <span>${o}</span>
+        </label>
+      `;
+    })
+    .join("");
+}
+
+// Submit Survey
+async function submitSurvey() {
+  const responseID = Date.now(); // simple unique id
+  let payload = [];
+
+  QUESTIONS.forEach(q => {
+    let value = "";
+
+    if (q.questiontype === "text") {
+      value = document.getElementById(`q_${q.questionid}`).value;
+    }
+
+    if (q.questiontype === "single") {
+      const selected = document.querySelector(`input[name='q_${q.questionid}']:checked`);
+      value = selected ? selected.value : "";
+    }
+
+    if (q.questiontype === "multiple") {
+      const selected = [...document.querySelectorAll(`input[name='q_${q.questionid}']:checked`)].map(c => c.value);
+      value = selected.join(",");
+    }
+
+    payload.push({
+      responseid: responseID,
+      questionid: q.questionid,
+      answer: value
+    });
+  });
+
+  // Save one-by-one
+  for (const row of payload) {
+    await fetch(API_URL + "/save-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(row)
+    });
+  }
+
+  alert("Survey submitted successfully!");
+  window.location.reload();
+}
+
+loadQuestions();
+</script>
+</body>
+</html>
