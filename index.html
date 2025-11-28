@@ -70,6 +70,33 @@ function renderForm() {
       `;
     }
 
+    if (q.questiontype === "rating_1_10") {
+      // Use option1 and option2 as lower and upper limit
+      const min = parseInt(q.option1) || 1;
+      const max = parseInt(q.option2) || 10;
+
+      html = `
+        <div class='mb-6'>
+          <label class='block font-semibold mb-2'>${q.question}</label>
+          <input
+            type="range"
+            id="q_${q.questionid}"
+            min="${min}"
+            max="${max}"
+            value="${min}"
+            step="1"
+            class="w-full"
+            oninput="document.getElementById('label_q_${q.questionid}').textContent = this.value"
+          />
+          <div class="flex justify-between text-xs text-gray-600 mt-1">
+            <span>${min}</span>
+            <span id="label_q_${q.questionid}">${min}</span>
+            <span>${max}</span>
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML += html;
   });
 }
@@ -119,6 +146,10 @@ async function submitSurvey() {
     if (q.questiontype === "multiple") {
       const selected = [...document.querySelectorAll(`input[name='q_${q.questionid}']:checked`)].map(c => c.value);
       value = selected.join(",");
+    }
+
+    if (q.questiontype === "rating_1_10") {
+      value = document.getElementById(`q_${q.questionid}`).value;
     }
 
     payload.push({
