@@ -19,10 +19,13 @@
     <div class="flex items-center space-x-3">
       <!-- Manage Questions Button -->
       <button onclick="window.location.href='questions.html'"
-        class="bg-white text-blue-600 px-4 py-2 rounded shadow">
+        class="bg-white text-blue-600 px-4 py-1 rounded shadow">
         Manage Questions
       </button>
-
+      <button onclick="window.location.href='index.html'"
+        class="bg-white text-blue-600 px-4 py-1 rounded shadow">
+        Form
+      </button>
       <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">
         Logout
       </button>
@@ -65,7 +68,7 @@
     // LOGIN PROTECTION
     // -------------------------------
     if (!localStorage.getItem("loggedIn")) {
-      window.location.href = "index.html";
+      window.location.href = "login.html";
     }
 
     // -------------------------------
@@ -73,7 +76,7 @@
     // -------------------------------
     function logout() {
       localStorage.removeItem("loggedIn");
-      window.location.href = "index.html";
+      window.location.href = "login.html";
     }
 
     // -------------------------------
