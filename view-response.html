@@ -151,9 +151,9 @@
     // Get response ID from URL and clean decimal .0 if present
     const urlParams = new URLSearchParams(window.location.search);
     let responseId = urlParams.get('responseid');
-    if (responseId) {
-      responseId = responseId.replace('.0', '');
-    }
+    // if (responseId) {
+    //   responseId = responseId.replace('.0', '');
+    // }
 
     if (!responseId) {
       document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
