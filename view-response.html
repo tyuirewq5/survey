@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>View Response - Survey Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="t.js"></script>
   <script>
     tailwind.config = {
@@ -148,18 +148,16 @@
       window.location.href = "login.html";
     }
 
-    // Get response ID from URL
     // Get response ID from URL and clean decimal .0 if present
-      const urlParams = new URLSearchParams(window.location.search);
-      let responseId = urlParams.get('responseid');
-      // if (responseId) {
-      //   responseId = responseId.replace('.0', '');
-      // }
-      
-      if (!responseId) {
-        document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
-      }
+    const urlParams = new URLSearchParams(window.location.search);
+    let responseId = urlParams.get('responseid');
+    if (responseId) {
+      responseId = responseId.replace('.0', '');
+    }
 
+    if (!responseId) {
+      document.body.innerHTML = '<div class="text-center py-20"><h1 class="text-2xl font-bold text-red-400">No response ID found</h1></div>';
+    }
 
     // Format time ago
     function formatTimeAgo(dateStr) {
@@ -178,7 +176,7 @@
       return `${seconds}s ago`;
     }
 
-    // Load response data
+    // Load response data - only responses that have relevant questions included
     async function loadResponse() {
       try {
         const res = await fetch(`${API_URL}/responses?responseid=${responseId}`);
@@ -189,21 +187,9 @@
           return;
         }
 
-        // Get questions for context
-        const qRes = await fetch(`${API_URL}/questions`);
-        const questions = await qRes.json();
-        const activeQuestions = questions.filter(q => q.del_flag != 1);
-
-        // Group responses by question
-        const grouped = {};
-        responses.forEach(r => {
-          grouped[r.questionid] = r.answer;
-        });
-
         // Update header
-        const nameQuestion = activeQuestions.find(q => q.questionid == 1);
         document.getElementById("responseId").textContent = `#${responseId.slice(-8)}`;
-        document.getElementById("respondentName").textContent = grouped[1] || "Anonymous";
+        document.getElementById("respondentName").textContent = responses[0].answer || "Anonymous";
         document.getElementById("submittedTime").textContent = formatTimeAgo(responses[0].created_at);
         document.getElementById("responseMeta").textContent = `Submitted ${formatTimeAgo(responses[0].created_at)} • ${responses.length} answers`;
 
@@ -211,9 +197,8 @@
         const container = document.getElementById("answersContainer");
         container.innerHTML = "";
 
-        activeQuestions.forEach((q, index) => {
-          const answer = grouped[q.questionid] || "No response";
-          const html = createAnswerCard(q, answer, index);
+        responses.forEach((r, index) => {
+          const html = createAnswerCard(r, r.answer, index);
           container.innerHTML += html;
         });
 
@@ -308,7 +293,6 @@
       window.URL.revokeObjectURL(url);
     }
 
-    // Load data on page load
     window.addEventListener('load', loadResponse);
 
     // Animations
