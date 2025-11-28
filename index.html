@@ -2,177 +2,233 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Investment Survey Form</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    /* Floating blob animations */
+    @keyframes float1 {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(20px); }
+    }
+    .blob {
+      position: fixed;
+      border-radius: 9999px;
+      filter: blur(70px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
+    .blob1 {
+      top: 10%;
+      right: -10%;
+      width: 320px;
+      height: 320px;
+      background: #7c3aed;
+      animation: float1 6s ease-in-out infinite;
+    }
+    .blob2 {
+      bottom: 10%;
+      left: -15%;
+      width: 280px;
+      height: 280px;
+      background: #22c55e;
+      animation: float2 8s ease-in-out infinite;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      background: #7c3aed;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    input[type=range]:hover::-webkit-slider-thumb {
+      background: #a78bfa;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gradient-to-br from-slate-900 to-purple-900 min-h-screen text-white relative overflow-x-hidden">
+
+  <!-- Background blobs -->
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
 
   <!-- Navbar -->
-  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Survey Form</h1>
-  </div>
+  <nav class="sticky top-0 z-10 bg-purple-800 bg-opacity-70 backdrop-blur-md shadow-md px-6 py-4 flex items-center justify-between">
+    <h1 class="text-3xl font-semibold tracking-wide">Investment Survey</h1>
+  </nav>
 
-  <!-- Container -->
-  <div class="p-6 max-w-3xl mx-auto">
+  <!-- Main Container -->
+  <main class="max-w-xl mx-auto p-6 relative z-10">
+    <section id="formContainer" class="bg-white bg-opacity-10 rounded-3xl p-8 shadow-lg backdrop-blur-md">
+      <!-- Questions load here -->
+    </section>
 
-    <div id="formContainer" class="bg-white shadow rounded p-6"></div>
-
-    <button id="submitBtn" onclick="submitSurvey()" class="mt-6 bg-green-600 text-white px-6 py-2 rounded">
-      Submit Survey
+    <button id="submitBtn" onclick="submitSurvey()" 
+            class="mt-8 w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg rounded-xl py-3 font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3">
+      <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span id="btnText">Submit Survey</span>
     </button>
-
-  </div>
+  </main>
 
 <script>
-const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
-let QUESTIONS = [];
+  const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+  let QUESTIONS = [];
 
-// Load Questions
-async function loadQuestions() {
-  const res = await fetch(API_URL + "/questions");
-  QUESTIONS = await res.json();
-  renderForm();
-}
-
-// Render Form Dynamically
-function renderForm() {
-  const container = document.getElementById("formContainer");
-  container.innerHTML = "";
-
-  QUESTIONS.forEach(q => {
-    let html = ``;
-
-    if (q.questiontype === "text") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          <input type='text' id='q_${q.questionid}' class='w-full border p-2 rounded' />
-        </div>
-      `;
+  // Load Questions from API and render form
+  async function loadQuestions() {
+    try {
+      const res = await fetch(API_URL + "/questions");
+      QUESTIONS = await res.json();
+      renderForm();
+    } catch(e) {
+      console.error("Failed to load questions:", e);
+      document.getElementById("formContainer").innerHTML = "<p class='text-red-400'>Failed to load questions. Please try again later.</p>";
     }
+  }
 
-    if (q.questiontype === "single") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          ${renderOptions(q, "single")}
-        </div>
-      `;
-    }
+  // Render Form
+  function renderForm() {
+    const container = document.getElementById("formContainer");
+    container.innerHTML = "";
 
-    if (q.questiontype === "multiple") {
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          ${renderOptions(q, "multiple")}
-        </div>
-      `;
-    }
+    QUESTIONS.forEach(q => {
+      let html = "";
 
-    if (q.questiontype === "rating_1_10") {
-      // Use option1 and option2 as lower and upper limit
-      const min = parseInt(q.option1) || 1;
-      const max = parseInt(q.option2) || 10;
-
-      html = `
-        <div class='mb-6'>
-          <label class='block font-semibold mb-2'>${q.question}</label>
-          <input
-            type="range"
-            id="q_${q.questionid}"
-            min="${min}"
-            max="${max}"
-            value="${min}"
-            step="1"
-            class="w-full"
-            oninput="document.getElementById('label_q_${q.questionid}').textContent = this.value"
-          />
-          <div class="flex justify-between text-xs text-gray-600 mt-1">
-            <span>${min}</span>
-            <span id="label_q_${q.questionid}">${min}</span>
-            <span>${max}</span>
+      if(q.questiontype === "text") {
+        html = `
+          <div class="mb-8 space-y-2">
+            <label for="q_${q.questionid}" class="block text-lg font-semibold text-white">${q.question}</label>
+            <input type="text" id="q_${q.questionid}" class="w-full rounded-lg bg-white bg-opacity-20 border border-white/25 focus:border-purple-400 focus:ring-2 focus:ring-purple-400 focus:outline-none p-3 text-white placeholder:text-white/70 transition" placeholder="Type your answer..." />
           </div>
-        </div>
-      `;
-    }
-
-    container.innerHTML += html;
-  });
-}
-
-function renderOptions(q, type) {
-  const opts = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6];
-
-  return opts
-    .filter(o => o && o.trim() !== "")
-    .map(o => {
-      if (type === "single") {
-        return `
-          <label class='flex items-center space-x-2 mb-1'>
-            <input type='radio' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
-            <span>${o}</span>
-          </label>
+        `;
+      } else if(q.questiontype === "single") {
+        html = `
+          <fieldset class="mb-8">
+            <legend class="text-lg font-semibold mb-3 text-white">${q.question}</legend>
+            ${renderOptions(q, "single")}
+          </fieldset>
+        `;
+      } else if(q.questiontype === "multiple") {
+        html = `
+          <fieldset class="mb-8">
+            <legend class="text-lg font-semibold mb-3 text-white">${q.question}</legend>
+            ${renderOptions(q, "multiple")}
+          </fieldset>
+        `;
+      } else if(q.questiontype === "rating_1_10") {
+        const min = parseInt(q.option1) || 1;
+        const max = parseInt(q.option2) || 10;
+        html = `
+          <div class="mb-8">
+            <label for="q_${q.questionid}" class="block text-lg font-semibold mb-2 text-white">${q.question}</label>
+            <input type="range" id="q_${q.questionid}" min="${min}" max="${max}" value="${min}" step="1" class="w-full cursor-pointer" 
+              oninput="document.getElementById('label_q_${q.questionid}').textContent = this.value" />
+            <div class="flex justify-between text-sm text-white/70 mt-1 select-none">
+              <span>${min}</span>
+              <span id="label_q_${q.questionid}">${min}</span>
+              <span>${max}</span>
+            </div>
+          </div>
         `;
       }
 
-      return `
-        <label class='flex items-center space-x-2 mb-1'>
-          <input type='checkbox' name='q_${q.questionid}' value='${o}' class='h-4 w-4' />
-          <span>${o}</span>
-        </label>
-      `;
-    })
-    .join("");
-}
-
-// Submit Survey
-async function submitSurvey() {
-  const responseID = Date.now(); // simple unique id
-  let payload = [];
-
-  QUESTIONS.forEach(q => {
-    let value = "";
-
-    if (q.questiontype === "text") {
-      value = document.getElementById(`q_${q.questionid}`).value;
-    }
-
-    if (q.questiontype === "single") {
-      const selected = document.querySelector(`input[name='q_${q.questionid}']:checked`);
-      value = selected ? selected.value : "";
-    }
-
-    if (q.questiontype === "multiple") {
-      const selected = [...document.querySelectorAll(`input[name='q_${q.questionid}']:checked`)].map(c => c.value);
-      value = selected.join(",");
-    }
-
-    if (q.questiontype === "rating_1_10") {
-      value = document.getElementById(`q_${q.questionid}`).value;
-    }
-
-    payload.push({
-      responseid: responseID,
-      questionid: q.questionid,
-      answer: value
-    });
-  });
-
-  // Save one-by-one
-  for (const row of payload) {
-    await fetch(API_URL + "/save-response", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(row)
+      container.innerHTML += html;
     });
   }
 
-  alert("Survey submitted successfully!");
-  window.location.reload();
-}
+  // Render options for single or multiple choice questions
+  function renderOptions(q, type) {
+    const opts = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6].filter(o => o && o.trim() !== "");
+    return opts.map(option => {
+      if(type === "single") {
+        return `
+          <label class="relative flex items-center space-x-3 mb-3 cursor-pointer">
+            <input type="radio" name="q_${q.questionid}" value="${option}" class="peer hidden" />
+            <span class="w-6 h-6 rounded-full border-2 border-white/50 peer-checked:border-purple-500 peer-checked:bg-purple-600 transition"></span>
+            <span class="text-white">${option}</span>
+          </label>
+        `;
+      } else {
+        return `
+          <label class="relative flex items-center space-x-3 mb-3 cursor-pointer">
+            <input type="checkbox" name="q_${q.questionid}" value="${option}" class="peer hidden" />
+            <span class="w-6 h-6 rounded-lg border-2 border-white/50 peer-checked:border-purple-500 peer-checked:bg-purple-600 transition"></span>
+            <span class="text-white">${option}</span>
+          </label>
+        `;
+      }
+    }).join("");
+  }
 
-loadQuestions();
+  // Submit survey answers
+  async function submitSurvey() {
+    const submitBtn = document.getElementById("submitBtn");
+    const btnText = document.getElementById("btnText");
+    const btnIcon = document.getElementById("btnIcon");
+
+    try {
+      submitBtn.disabled = true;
+      btnText.textContent = "Submitting...";
+      btnIcon.innerHTML = `<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z">
+                             <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                           </path>`;
+
+      const responseID = Date.now();
+      let payload = [];
+
+      QUESTIONS.forEach(q => {
+        let value = "";
+        if(q.questiontype === "text") {
+          value = document.getElementById(`q_${q.questionid}`).value.trim();
+        } else if(q.questiontype === "single") {
+          const selected = document.querySelector(`input[name='q_${q.questionid}']:checked`);
+          value = selected ? selected.value : "";
+        } else if(q.questiontype === "multiple") {
+          const selected = [...document.querySelectorAll(`input[name='q_${q.questionid}']:checked`)].map(e => e.value);
+          value = selected.join(",");
+        } else if(q.questiontype === "rating_1_10") {
+          value = document.getElementById(`q_${q.questionid}`).value;
+        }
+        payload.push({ responseid: responseID, questionid: q.questionid, answer: value });
+      });
+
+      // Save responses one by one
+      for(const row of payload) {
+        await fetch(API_URL + "/save-response", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(row)
+        });
+      }
+
+      alert("Survey submitted successfully!");
+      window.location.reload();
+
+    } catch(err) {
+      console.error("Submit failed:", err);
+      alert("Failed to submit survey. Please try again.");
+    } finally {
+      submitBtn.disabled = false;
+      btnText.textContent = "Submit Survey";
+      btnIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />`;
+    }
+  }
+
+  window.onload = loadQuestions;
 </script>
+
 </body>
 </html>
