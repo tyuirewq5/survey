@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Investment Survey Form</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     html, body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -50,9 +50,19 @@
       border: none;
       cursor: pointer;
       transition: background-color 0.3s;
+      width: 20px;
+      height: 20px;
     }
     input[type=range]:hover::-webkit-slider-thumb {
       background: #a78bfa;
+    }
+    .error-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
   </style>
 </head>
@@ -64,22 +74,32 @@
 
   <!-- Navbar -->
   <nav class="sticky top-0 z-10 bg-purple-800 bg-opacity-70 backdrop-blur-md shadow-md px-6 py-4 flex items-center justify-between">
-    <h1 class="text-3xl font-semibold tracking-wide">Investment Survey</h1>
+    <h1 class="text-2xl font-semibold tracking-wide">Investment Survey</h1>
   </nav>
 
   <!-- Main Container -->
-  <main class="max-w-xl mx-auto p-6 relative z-10">
+  <main class="max-w-2xl mx-auto p-6 relative z-10">
     <section id="formContainer" class="bg-white bg-opacity-10 rounded-3xl p-8 shadow-lg backdrop-blur-md">
       <!-- Questions load here -->
     </section>
 
     <button id="submitBtn" onclick="submitSurvey()" 
-            class="mt-8 w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg rounded-xl py-3 font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3">
-      <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+            class="mt-10 w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg rounded-xl py-4 font-semibold text-base transition-all duration-300 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed">
+      <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>
       <span id="btnText">Submit Survey</span>
     </button>
+
+    <!-- Error message -->
+    <div id="errorMessage" class="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300 hidden">
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span id="errorText"></span>
+      </div>
+    </div>
   </main>
 
 <script>
@@ -94,7 +114,7 @@
       renderForm();
     } catch(e) {
       console.error("Failed to load questions:", e);
-      document.getElementById("formContainer").innerHTML = "<p class='text-red-400'>Failed to load questions. Please try again later.</p>";
+      document.getElementById("formContainer").innerHTML = "<p class='text-red-400 text-center py-12'>Failed to load questions. Please try again later.</p>";
     }
   }
 
@@ -104,38 +124,40 @@
     container.innerHTML = "";
 
     QUESTIONS.forEach(q => {
-      let html = "";
+      let html = `
+        <div class="mb-8 pb-6 border-b border-white/20 last:border-b-0">
+          <label class="block text-base font-semibold mb-3 text-white" data-qid="${q.questionid}">
+            ${q.question} ${q.mandatory ? '<span class="text-red-400 text-sm font-normal">*</span>' : ''}
+          </label>
+      `;
 
       if(q.questiontype === "text") {
-        html = `
-          <div class="mb-8 space-y-2">
-            <label for="q_${q.questionid}" class="block text-lg font-semibold text-white">${q.question}</label>
-            <input type="text" id="q_${q.questionid}" class="w-full rounded-lg bg-white bg-opacity-20 border border-white/25 focus:border-purple-400 focus:ring-2 focus:ring-purple-400 focus:outline-none p-3 text-white placeholder:text-white/70 transition" placeholder="Type your answer..." />
-          </div>
-        `;
-      } else if(q.questiontype === "single") {
-        html = `
-          <fieldset class="mb-8">
-            <legend class="text-lg font-semibold mb-3 text-white">${q.question}</legend>
-            ${renderOptions(q, "single")}
-          </fieldset>
-        `;
-      } else if(q.questiontype === "multiple") {
-        html = `
-          <fieldset class="mb-8">
-            <legend class="text-lg font-semibold mb-3 text-white">${q.question}</legend>
-            ${renderOptions(q, "multiple")}
-          </fieldset>
-        `;
-      } else if(q.questiontype === "rating_1_10") {
+        html += `<input type="text" id="q_${q.questionid}" class="w-full rounded-xl bg-white/10 border border-white/20 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 focus:outline-none p-4 text-white placeholder:text-white/60 transition-all duration-300 text-sm" placeholder="Type your answer..." />`;
+      } 
+      else if(q.questiontype === "number") {
+        html += `<input type="number" id="q_${q.questionid}" class="w-full rounded-xl bg-white/10 border border-white/20 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 focus:outline-none p-4 text-white placeholder:text-white/60 transition-all duration-300 text-sm" placeholder="Enter number" step="any" />`;
+      }
+      else if(q.questiontype === "phone") {
+        html += `<input type="tel" id="q_${q.questionid}" class="w-full rounded-xl bg-white/10 border border-white/20 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 focus:outline-none p-4 text-white placeholder:text-white/60 transition-all duration-300 text-sm" placeholder="Enter phone number" />`;
+      }
+      else if(q.questiontype === "email") {
+        html += `<input type="email" id="q_${q.questionid}" class="w-full rounded-xl bg-white/10 border border-white/20 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 focus:outline-none p-4 text-white placeholder:text-white/60 transition-all duration-300 text-sm" placeholder="Enter email address" />`;
+      }
+      else if(q.questiontype === "single") {
+        html += `<div class="space-y-2 mt-4">${renderOptions(q, "single")}</div>`;
+      }
+      else if(q.questiontype === "multiple") {
+        html += `<div class="space-y-2 mt-4">${renderOptions(q, "multiple")}</div>`;
+      }
+      else if(q.questiontype === "rating_1_10") {
         const min = parseInt(q.option1) || 1;
         const max = parseInt(q.option2) || 10;
-        html = `
-          <div class="mb-8">
-            <label for="q_${q.questionid}" class="block text-lg font-semibold mb-2 text-white">${q.question}</label>
-            <input type="range" id="q_${q.questionid}" min="${min}" max="${max}" value="${min}" step="1" class="w-full cursor-pointer" 
-              oninput="document.getElementById('label_q_${q.questionid}').textContent = this.value" />
-            <div class="flex justify-between text-sm text-white/70 mt-1 select-none">
+        html += `
+          <div class="mt-4">
+            <input type="range" id="q_${q.questionid}" min="${min}" max="${max}" value="${min}" step="1" 
+              class="w-full h-2 bg-white/20 rounded-lg cursor-pointer appearance-none" 
+              oninput="updateRatingLabel('${q.questionid}', this.value, ${min}, ${max})" />
+            <div class="flex justify-between text-xs text-white/70 mt-2 select-none">
               <span>${min}</span>
               <span id="label_q_${q.questionid}">${min}</span>
               <span>${max}</span>
@@ -144,36 +166,118 @@
         `;
       }
 
+      html += `</div>`;
       container.innerHTML += html;
     });
   }
 
-  // Render options for single or multiple choice questions
+  // Render options for single or multiple choice
   function renderOptions(q, type) {
     const opts = [q.option1, q.option2, q.option3, q.option4, q.option5, q.option6].filter(o => o && o.trim() !== "");
     return opts.map(option => {
       if(type === "single") {
         return `
-          <label class="relative flex items-center space-x-3 mb-3 cursor-pointer">
+          <label class="flex items-center space-x-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group">
             <input type="radio" name="q_${q.questionid}" value="${option}" class="peer hidden" />
-            <span class="w-6 h-6 rounded-full border-2 border-white/50 peer-checked:border-purple-500 peer-checked:bg-purple-600 transition"></span>
-            <span class="text-white">${option}</span>
+            <span class="w-5 h-5 rounded-full border-2 border-white/40 peer-checked:border-purple-400 peer-checked:bg-purple-500 group-hover:border-white/60 transition-all duration-300"></span>
+            <span class="text-sm text-white">${option}</span>
           </label>
         `;
       } else {
         return `
-          <label class="relative flex items-center space-x-3 mb-3 cursor-pointer">
+          <label class="flex items-center space-x-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group">
             <input type="checkbox" name="q_${q.questionid}" value="${option}" class="peer hidden" />
-            <span class="w-6 h-6 rounded-lg border-2 border-white/50 peer-checked:border-purple-500 peer-checked:bg-purple-600 transition"></span>
-            <span class="text-white">${option}</span>
+            <span class="w-5 h-5 rounded border-2 border-white/40 peer-checked:border-purple-400 peer-checked:bg-purple-500 group-hover:border-white/60 transition-all duration-300"></span>
+            <span class="text-sm text-white">${option}</span>
           </label>
         `;
       }
     }).join("");
   }
 
-  // Submit survey answers
+  // Update rating label
+  function updateRatingLabel(qid, value, min, max) {
+    document.getElementById(`label_q_${qid}`).textContent = value;
+  }
+
+  // Validate single form field
+  function validateField(q) {
+    const fieldId = `q_${q.questionid}`;
+    const field = document.getElementById(fieldId);
+    const label = document.querySelector(`label[data-qid="${q.questionid}"]`);
+    
+    if (!field) return true;
+
+    let value = "";
+    let isValid = true;
+
+    // Get value based on type
+    if (q.questiontype === "text" || q.questiontype === "number" || q.questiontype === "phone" || q.questiontype === "email") {
+      value = field.value.trim();
+    } else if (q.questiontype === "single") {
+      const selected = document.querySelector(`input[name='${fieldId}']:checked`);
+      value = selected ? selected.value : "";
+    } else if (q.questiontype === "multiple") {
+      const selected = document.querySelectorAll(`input[name='${fieldId}']:checked`);
+      value = Array.from(selected).map(cb => cb.value).join(",");
+    } else if (q.questiontype === "rating_1_10") {
+      value = field.value;
+    }
+
+    // Check if mandatory and empty
+    if (q.mandatory && !value) {
+      isValid = false;
+      field.classList.add("border-red-400", "ring-2", "ring-red-400/50", "error-shake");
+      return false;
+    }
+
+    // Type-specific validation
+    if (value && q.questiontype === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      isValid = false;
+      field.classList.add("border-red-400", "ring-2", "ring-red-400/50");
+      return false;
+    }
+
+    if (value && q.questiontype === "phone" && !/^\+?[\d\s\-\(\)]{10,15}$/.test(value)) {
+      isValid = false;
+      field.classList.add("border-red-400", "ring-2", "ring-red-400/50");
+      return false;
+    }
+
+    // Clear errors
+    field.classList.remove("border-red-400", "ring-2", "ring-red-400/50", "error-shake");
+    return true;
+  }
+
+  // Validate entire form
+  function validateForm() {
+    let isValid = true;
+    const errors = [];
+
+    QUESTIONS.forEach(q => {
+      if (!validateField(q)) {
+        isValid = false;
+        errors.push(q.question);
+      }
+    });
+
+    if (!isValid) {
+      document.getElementById("errorMessage").classList.remove("hidden");
+      document.getElementById("errorText").textContent = `Please complete these required fields: ${errors.slice(0,3).join(', ')}${errors.length > 3 ? ` and ${errors.length - 3} more` : ''}`;
+      document.getElementById("errorMessage").scrollIntoView({ behavior: 'smooth' });
+    } else {
+      document.getElementById("errorMessage").classList.add("hidden");
+    }
+
+    return isValid;
+  }
+
+  // Submit survey with validation
   async function submitSurvey() {
+    if (!validateForm()) {
+      return;
+    }
+
     const submitBtn = document.getElementById("submitBtn");
     const btnText = document.getElementById("btnText");
     const btnIcon = document.getElementById("btnIcon");
@@ -181,17 +285,14 @@
     try {
       submitBtn.disabled = true;
       btnText.textContent = "Submitting...";
-      btnIcon.innerHTML = `<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z">
-                             <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-                           </path>`;
+      btnIcon.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>`;
 
       const responseID = Date.now();
       let payload = [];
 
       QUESTIONS.forEach(q => {
         let value = "";
-        if(q.questiontype === "text") {
+        if(["text", "number", "phone", "email"].includes(q.questiontype)) {
           value = document.getElementById(`q_${q.questionid}`).value.trim();
         } else if(q.questiontype === "single") {
           const selected = document.querySelector(`input[name='q_${q.questionid}']:checked`);
@@ -205,7 +306,7 @@
         payload.push({ responseid: responseID, questionid: q.questionid, answer: value });
       });
 
-      // Save responses one by one
+      // Save responses
       for(const row of payload) {
         await fetch(API_URL + "/save-response", {
           method: "POST",
@@ -214,18 +315,41 @@
         });
       }
 
-      alert("Survey submitted successfully!");
-      window.location.reload();
+      // Success
+      document.getElementById("formContainer").innerHTML = `
+        <div class="text-center py-20">
+          <div class="w-24 h-24 bg-green-500/20 rounded-3xl mx-auto mb-6 flex items-center justify-center">
+            <svg class="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-green-400 mb-4">Thank You!</h2>
+          <p class="text-white/80 mb-8">Your survey has been submitted successfully.</p>
+          <button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition">Submit Another</button>
+        </div>
+      `;
 
     } catch(err) {
       console.error("Submit failed:", err);
-      alert("Failed to submit survey. Please try again.");
+      document.getElementById("errorText").textContent = "Failed to submit survey. Please try again.";
+      document.getElementById("errorMessage").classList.remove("hidden");
     } finally {
       submitBtn.disabled = false;
       btnText.textContent = "Submit Survey";
       btnIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />`;
     }
   }
+
+  // Clear validation errors on input
+  document.addEventListener('input', function(e) {
+    if (e.target.id.startsWith('q_')) {
+      const qid = e.target.id.split('_')[1];
+      const question = QUESTIONS.find(q => q.questionid == qid);
+      if (question) {
+        validateField(question);
+      }
+    }
+  });
 
   window.onload = loadQuestions;
 </script>
