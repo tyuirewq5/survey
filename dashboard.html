@@ -1,87 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Survey Dashboard</title>
-
-  <!-- Tailwind CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'ui-sans-serif', 'system-ui']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .metric-glow {
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100">
-
-  <!-- Navbar -->
-  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Survey Dashboard</h1>
-
-    <div class="flex items-center space-x-3">
-      <!-- Manage Questions Button -->
-      <button onclick="window.location.href='questions.html'"
-        class="bg-white text-blue-600 px-4 py-1 rounded shadow">
-        Manage Questions
-      </button>
-      <button onclick="window.location.href='index.html'"
-        class="bg-white text-blue-600 px-4 py-1 rounded shadow">
-        Form
-      </button>
-      <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">
-        Logout
-      </button>
-    </div>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white font-sans">
+  
+  <!-- Floating particles -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+    <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+    <div class="absolute top-40 left-40 w-80 h-80 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
   </div>
 
-  <!-- Container -->
-  <div class="p-6">
+  <!-- Navbar -->
+  <nav class="glass backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
+    <div class="px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Survey Dashboard</h1>
+          <p class="text-sm text-slate-300">Monitor responses & analytics</p>
+        </div>
+      </div>
 
-    <h2 class="text-2xl font-semibold mb-4">All Survey Responses</h2>
+      <div class="flex items-center space-x-2">
+        <button onclick="window.location.href='questions.html'" 
+                class="glass-hover px-4 py-2 rounded-xl text-sm font-medium border border-white/20 hover:border-white/40 transition-all duration-300">
+          Manage Questions
+        </button>
+        <button onclick="window.location.href='index.html'" 
+                class="glass-hover px-4 py-2 rounded-xl text-sm font-medium border border-white/20 hover:border-white/40 transition-all duration-300">
+          Take Survey
+        </button>
+        <button onclick="logout()" 
+                class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+          Logout
+        </button>
+      </div>
+    </div>
+  </nav>
 
-    <!-- Export Button -->
-    <button onclick="exportTableToExcel()"
-      class="bg-green-600 text-white px-4 py-2 rounded shadow mb-4">
-      Export to Excel
-    </button>
+  <!-- Main Container -->
+  <div class="px-6 py-12 max-w-7xl mx-auto relative z-10">
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      
+      <!-- Total Responses -->
+      <div id="totalCard" class="glass-hover rounded-2xl p-8 metric-glow transition-all duration-700 hover:scale-[1.02]">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Responses</p>
+            <p id="totalResponses" class="text-4xl font-bold text-white mt-2 animate-pulse">—</p>
+          </div>
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-400/20 to-blue-500/20 rounded-2xl flex items-center justify-center">
+            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 011.6 3.179 3.42 3.42 0 01-.398 2.407 3.42 3.42 0 01-.961 1.093m-4.816 4.568a3.42 3.42 0 00-1.946.806 3.42 3.42 0 00-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 00-1.6-3.179 3.42 3.42 0 00.398-2.407 3.42 3.42 0 00.961-1.093m4.816-4.568a3.42 3.42 0 011.946.806 3.42 3.42 0 010 4.438 3.42 3.42 0 01-1.946.806 3.42 3.42 0 01-1.946-.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 01-1.946-.806 3.42 3.42 0 010-4.438 3.42 3.42 0 011.946-.806 3.42 3.42 0 014.438 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
 
-    <!-- Table Container -->
-    <div class="overflow-x-auto bg-white rounded shadow">
-      <table class="min-w-full text-sm text-left border">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="px-4 py-2 border">S.No</th>
-            <th class="px-4 py-2 border">Response ID</th>
-            <th class="px-4 py-2 border">Name</th>
-            <th class="px-4 py-2 border">Filled On</th>
-            <th class="px-4 py-2 border">Action</th>
-          </tr>
-        </thead>
-        <tbody id="responseBody"></tbody>
-      </table>
+      <!-- Today's Responses -->
+      <div id="todayCard" class="glass-hover rounded-2xl p-8 metric-glow transition-all duration-700 hover:scale-[1.02] animate-fade-in-up animation-delay-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-emerald-300 text-sm font-medium uppercase tracking-wider">Today's Responses</p>
+            <p id="todayResponses" class="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-500 bg-clip-text text-transparent mt-2">—</p>
+          </div>
+          <div class="w-16 h-16 bg-gradient-to-r from-emerald-400/20 to-emerald-500/20 rounded-2xl flex items-center justify-center">
+            <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Response Rate -->
+      <div id="rateCard" class="glass-hover rounded-2xl p-8 metric-glow transition-all duration-700 hover:scale-[1.02] animate-fade-in-up animation-delay-400">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-purple-300 text-sm font-medium uppercase tracking-wider">Avg Completion</p>
+            <p id="completionRate" class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent mt-2">—</p>
+          </div>
+          <div class="w-16 h-16 bg-gradient-to-r from-purple-400/20 to-purple-500/20 rounded-2xl flex items-center justify-center">
+            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Questions -->
+      <div class="glass-hover rounded-2xl p-8 metric-glow transition-all duration-700 hover:scale-[1.02] animate-fade-in-up animation-delay-600">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-orange-300 text-sm font-medium uppercase tracking-wider">Active Questions</p>
+            <p id="activeQuestions" class="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent mt-2">—</p>
+          </div>
+          <div class="w-16 h-16 bg-gradient-to-r from-orange-400/20 to-orange-500/20 rounded-2xl flex items-center justify-center">
+            <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- Responses Section -->
+    <div class="glass backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent mb-2">Recent Responses</h2>
+          <p class="text-slate-400 text-lg">View and manage all survey submissions</p>
+        </div>
+        <button onclick="exportTableToExcel()" 
+                class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10l-5.5 5.5m0 0L7.5 18M7.5 18l-.5.5m5.5-11L17 15m-3-7h3m-3 4h3"></path>
+          </svg>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- Enhanced Table -->
+      <div class="overflow-x-auto rounded-2xl border border-white/10">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="bg-white/5 backdrop-blur-sm">
+              <th class="px-6 py-4 text-left font-semibold text-slate-300">#</th>
+              <th class="px-6 py-4 text-left font-semibold text-slate-300">Response ID</th>
+              <th class="px-6 py-4 text-left font-semibold text-slate-300">Respondent</th>
+              <th class="px-6 py-4 text-left font-semibold text-slate-300">Submitted</th>
+              <th class="px-6 py-4 text-right font-semibold text-slate-300">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="responseBody" class="divide-y divide-white/10"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
     const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
 
-    // -------------------------------
     // LOGIN PROTECTION
-    // -------------------------------
     if (!localStorage.getItem("loggedIn")) {
       window.location.href = "login.html";
     }
 
-    // -------------------------------
     // LOGOUT
-    // -------------------------------
     function logout() {
       localStorage.removeItem("loggedIn");
       window.location.href = "login.html";
     }
 
-    // -------------------------------
+    // LOAD STATS
+    async function loadStats() {
+      try {
+        const res = await fetch(API_URL + "/resdata");
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('totalResponses').textContent = data.total_responses;
+          document.getElementById('todayResponses').textContent = data.today_responses;
+        }
+      } catch (err) {
+        console.error('Stats error:', err);
+      }
+    }
+
+    // LOAD ACTIVE QUESTIONS
+    async function loadActiveQuestions() {
+      try {
+        const res = await fetch(API_URL + "/questions");
+        const questions = await res.json();
+        const active = questions.filter(q => q.del_flag != 1).length;
+        document.getElementById('activeQuestions').textContent = active;
+      } catch (err) {
+        console.error('Questions error:', err);
+      }
+    }
+
     // LOAD RESPONSES (GROUPED BY responseid)
-    // -------------------------------
     async function loadResponses() {
       try {
         const res = await fetch(API_URL + "/responses");
@@ -107,23 +256,35 @@
             grouped[row.responseid].name = row.answer;
           }
 
-          // Update filled time (latest)
           grouped[row.responseid].filled_on = row.created_at;
         });
 
         let sno = 1;
 
-        Object.values(grouped).forEach(item => {
+        Object.values(grouped).sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on)).forEach(item => {
+          const timeAgo = formatTimeAgo(new Date(item.filled_on));
+          
           body.innerHTML += `
-            <tr class="border">
-              <td class="px-4 py-2 border">${sno++}</td>
-              <td class="px-4 py-2 border">${item.responseid}</td>
-              <td class="px-4 py-2 border">${item.name || "—"}</td>
-              <td class="px-4 py-2 border">${item.filled_on}</td>
-              <td class="px-4 py-2 border">
-                <button onclick="viewResponse('${item.responseid}')"
-                  class="bg-blue-600 text-white px-3 py-1 rounded">
-                  View
+            <tr class="glass-hover hover:bg-white/10 transition-all duration-300 cursor-pointer group" onclick="viewResponse('${item.responseid}')" style="animation-delay: ${sno * 50}ms">
+              <td class="px-6 py-4 font-mono text-slate-400 text-sm">${sno++}</td>
+              <td class="px-6 py-4 font-mono text-slate-200">#${item.responseid.toString().slice(-8)}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-gradient-to-r from-purple-400/30 to-blue-400/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                  </div>
+                  <span class="font-semibold text-white truncate max-w-xs">${item.name || "Anonymous"}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-slate-400">
+                <div class="text-sm">${timeAgo}</div>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button onclick="event.stopPropagation(); viewResponse('${item.responseid}')" 
+                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                  View Details
                 </button>
               </td>
             </tr>
@@ -135,18 +296,28 @@
       }
     }
 
-    loadResponses();
+    // TIME AGO FORMATTER
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return `${seconds}s ago`;
+    }
 
-    // -------------------------------
-    // VIEW RESPONSE PAGE
-    // -------------------------------
+    // VIEW RESPONSE
     function viewResponse(responseid) {
       window.location.href = "view-response.html?responseid=" + responseid;
     }
 
-    // -------------------------------
     // EXPORT TO CSV
-    // -------------------------------
     function exportTableToExcel() {
       const table = document.querySelector("table");
       let csv = [];
@@ -167,11 +338,32 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "survey_responses.csv";
+      a.download = `survey_responses_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     }
-  </script>
 
+    // INIT
+    async function init() {
+      await Promise.all([loadStats(), loadActiveQuestions(), loadResponses()]);
+    }
+
+    init();
+
+    // CSS Animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+      }
+      .animate-blob { animation: blob 7s infinite; }
+      .animation-delay-2000 { animation-delay: 2s; }
+      .animation-delay-4000 { animation-delay: 4s; }
+    `;
+    document.head.appendChild(style);
+  </script>
 </body>
 </html>
