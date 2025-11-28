@@ -95,7 +95,9 @@
 
 <script>
 const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
-
+if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "login.html";
+    }
 // BACK
 function goBack() {
   window.location.href = "dashboard.html";
