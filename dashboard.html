@@ -213,12 +213,12 @@
 
     async function loadResponses() {
   try {
-    console.log("Fetching from:", API_URL + "/respes");
+    // console.log("Fetching from:", API_URL + "/respes");
     const res = await fetch(API_URL + "/respes");
-    console.log("Response status:", res.status);
-    const allData = await res.json();
-    console.log("Raw data length:", allData.length);
-    console.log("First 2 items:", allData.slice(0, 2));
+    // console.log("Response status:", res.status);
+    allData = await res.json();
+    // console.log("Raw data length:", allData.length);
+    // console.log("First 2 items:", allData.slice(0, 2));
 
     // Group responses by responseid
     const groupedMap = new Map();
@@ -233,7 +233,7 @@
     });
 
     filteredData = Array.from(groupedMap.values()).sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on));
-    console.log("Grouped data length:", filteredData.length);
+    // console.log("Grouped data length:", filteredData.length);
     
     currentPage = 1;
     renderPage();
@@ -243,38 +243,39 @@
   }
 }
 
-    function filterData(searchTerm) {
-      const term = searchTerm.trim().toLowerCase();
-      if (term === "") {
-        filteredData = Array.from(new Set(allData.map(row => row.responseid))).map(id => {
-          const rows = allData.filter(r => r.responseid === id);
-          const nameRow = rows.find(r => r.questionid == 1);
-          const latest = rows.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
-          return {
-            responseid: id,
-            name: nameRow ? nameRow.answer : "",
-            filled_on: latest.created_at
-          };
-        }).sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on));
-      } else {
-        const groupedMap = new Map();
-        allData.forEach(row => {
-          if (!groupedMap.has(row.responseid)) {
-            groupedMap.set(row.responseid, { name: "", filled_on: row.created_at, responseid: row.responseid });
-          }
-          if (row.questionid == 1) groupedMap.get(row.responseid).name = row.answer;
-          if (new Date(row.created_at) > new Date(groupedMap.get(row.responseid).filled_on)) {
-            groupedMap.get(row.responseid).filled_on = row.created_at;
-          }
-        });
-        filteredData = Array.from(groupedMap.values())
-          .filter(item =>
-            item.responseid.toString().toLowerCase().includes(term) ||
-            item.name.toLowerCase().includes(term)
-          )
-          .sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on));
+function filterData(searchTerm) {
+  const term = searchTerm.trim().toLowerCase();
+  if (term === "") {
+    filteredData = Array.from(new Set(allData.map(row => row.responseid))).map(id => {
+      const rows = allData.filter(r => r.responseid === id);
+      const nameRow = rows.find(r => r.questionid == 1);
+      const latest = rows.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+      return {
+        responseid: id,
+        name: nameRow ? nameRow.answer : "",
+        filled_on: latest.created_at
+      };
+    }).sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on));
+  } else {
+    const groupedMap = new Map();
+    allData.forEach(row => {
+      if (!groupedMap.has(row.responseid)) {
+        groupedMap.set(row.responseid, { name: "", filled_on: row.created_at, responseid: row.responseid });
       }
-    }
+      if (row.questionid == 1) groupedMap.get(row.responseid).name = row.answer;
+      if (new Date(row.created_at) > new Date(groupedMap.get(row.responseid).filled_on)) {
+        groupedMap.get(row.responseid).filled_on = row.created_at;
+      }
+    });
+
+    filteredData = Array.from(groupedMap.values())
+      .filter(item =>
+        item.responseid.toString().toLowerCase().includes(term) ||
+        (item.name || "").toLowerCase().includes(term)
+      )
+      .sort((a, b) => new Date(b.filled_on) - new Date(a.filled_on));
+  }
+}
 
     function renderPage() {
       const start = (currentPage - 1) * pageSize;
