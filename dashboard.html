@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="bg-gray-100">
+
+  <!-- Navbar -->
+  <div class="bg-blue-600 text-white px-6 py-4 flex justify-between">
+    <h1 class="text-xl font-bold">Survey Dashboard</h1>
+    <button onclick="logout()" class="bg-white text-blue-600 px-4 py-1 rounded">Logout</button>
+  </div>
+
+  <!-- Container -->
+  <div class="p-6">
+
+    <h2 class="text-2xl font-semibold mb-4">All Survey Responses</h2>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded shadow">
+      <table class="min-w-full text-sm text-left border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 border">ID</th>
+            <th class="px-4 py-2 border">Name</th>
+            <th class="px-4 py-2 border">Email</th>
+            <th class="px-4 py-2 border">Phone</th>
+            <th class="px-4 py-2 border">Created At</th>
+            <th class="px-4 py-2 border">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="responseBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+<script>
+const API_URL = "https://broad-sunset-7ec2.byash278.workers.dev";
+
+// Check login
+if (!localStorage.getItem("loggedIn")) {
+  window.location.href = "login.html";
+}
+
+// Logout function
+function logout() {
+  localStorage.removeItem("loggedIn");
+  window.location.href = "login.html";
+}
+
+// Fetch responses
+async function loadResponses() {
+  const res = await fetch(API_URL + "/responses");
+  const data = await res.json();
+
+  const body = document.getElementById("responseBody");
+  body.innerHTML = "";
+
+  data.forEach(row => {
+    body.innerHTML += `
+      <tr class="border">
+        <td class="px-4 py-2 border">${row.id}</td>
+        <td class="px-4 py-2 border">${row.name}</td>
+        <td class="px-4 py-2 border">${row.email}</td>
+        <td class="px-4 py-2 border">${row.phone}</td>
+        <td class="px-4 py-2 border">${row.created_at}</td>
+        <td class="px-4 py-2 border">
+          <button class="bg-blue-500 text-white px-2 py-1 rounded">View</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+loadResponses();
+</script>
+
+</body>
+</html>
